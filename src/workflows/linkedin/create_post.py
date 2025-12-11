@@ -8,6 +8,8 @@ from restack_ai.workflow import (
     workflow,
 )
 
+from src.client import TASK_QUEUE
+
 with import_functions():
     from src.functions.linkedin.create_post import (
         CreatePostInput,
@@ -25,6 +27,7 @@ class CreatePostOnLinkedinWorkflow:
                 function=create_post_on_linkedin,
                 function_input=CreatePostInput(text=workflow_input.text),
                 start_to_close_timeout=timedelta(seconds=120),
+                task_queue=TASK_QUEUE,
             )
         except Exception as e:
             error_message = f"Error during create_post_on_linkedin: {e}"

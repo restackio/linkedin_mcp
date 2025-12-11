@@ -8,6 +8,8 @@ from restack_ai.workflow import (
     workflow,
 )
 
+from src.client import TASK_QUEUE
+
 with import_functions():
     from src.functions.phantombuster.save_linkedin_lead import (
         SaveLeadInput,
@@ -24,6 +26,7 @@ class SaveLinkedinLeadWorkflowPhantombuster:
                 function=save_linkedin_lead_phantombuster,
                 function_input=SaveLeadInput(linkedin_profile_url=workflow_input.linkedin_profile_url),
                 start_to_close_timeout=timedelta(seconds=60),
+                task_queue=TASK_QUEUE,
             )
         except Exception as e:
             error_message = f"Error during save_linkedin_lead_phantombuster: {e}"

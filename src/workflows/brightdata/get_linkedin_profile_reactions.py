@@ -8,6 +8,8 @@ from restack_ai.workflow import (
     workflow,
 )
 
+from src.client import TASK_QUEUE
+
 with import_functions():
     from src.functions.brightdata.get_linkedin_profile_reactions import (
         GetReactionsInput,
@@ -26,6 +28,7 @@ class GetLinkedinProfileReactionsWorkflowBrightdata:
                 function=get_linkedin_profile_reactions_brightdata,
                 function_input=GetReactionsInput(profile_url=workflow_input.profile_url),
                 start_to_close_timeout=timedelta(seconds=60),
+                task_queue=TASK_QUEUE,
             )
         except Exception as e:
             # The error from the function is re-raised to be shown to the user.

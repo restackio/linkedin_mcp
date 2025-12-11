@@ -7,6 +7,7 @@ from restack_ai.restack import CloudConnectionOptions
 # Load environment variables from a .env file
 load_dotenv()
 
+TASK_QUEUE = "linkedin-mcp"
 
 engine_id = os.getenv("RESTACK_ENGINE_ID")
 address = os.getenv("RESTACK_ENGINE_ADDRESS")

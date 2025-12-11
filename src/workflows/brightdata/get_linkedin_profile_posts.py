@@ -8,6 +8,8 @@ from restack_ai.workflow import (
     workflow,
 )
 
+from src.client import TASK_QUEUE
+
 with import_functions():
     from src.functions.brightdata.get_linkedin_profile_posts import (
         GetProfilePostsInput,
@@ -25,6 +27,7 @@ class GetLinkedinProfilePostsWorkflowBrightdata:
                 function=get_linkedin_profile_posts_brightdata,
                 function_input=GetProfilePostsInput(profile_url=workflow_input.profile_url),
                 start_to_close_timeout=timedelta(seconds=120),
+                task_queue=TASK_QUEUE,
             )
         except Exception as e:
             error_message = f"Error during get_linkedin_profile_posts_brightdata: {e}"

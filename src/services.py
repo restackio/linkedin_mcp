@@ -5,7 +5,7 @@ from pathlib import Path
 
 from watchfiles import run_process
 
-from src.client import client
+from src.client import client, TASK_QUEUE
 
 # Import brightdata functions and workflows
 from src.functions.linkedin.create_post import create_post_on_linkedin
@@ -58,6 +58,7 @@ async def main() -> None:
         agents=[],
         workflows=workflows,
         functions=functions,
+        task_queue=TASK_QUEUE,
     )
 
 # demo purposes
