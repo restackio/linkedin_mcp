@@ -1,12 +1,6 @@
-import os
 from typing import Any
-import re
-from dotenv import load_dotenv
-import aiohttp
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field
 from restack_ai.function import NonRetryableError, function, log
-
-load_dotenv()
 
 
 class GetReactionsInput(BaseModel):
@@ -33,7 +27,7 @@ def raise_exception(message: str) -> None:
 
 
 @function.defn()
-async def get_linkedin_profile_reactions_brightdata(function_input: GetReactionsInput) -> dict[str, Any]:
+async def get_linkedin_profile_reactions_brightdata(function_input: GetReactionsInput) -> Any:
     """
     NOTE: Scraping reactions is a complex, multi-step task (get posts, then get
     reactions for each post) that requires a more advanced scraping solution.
