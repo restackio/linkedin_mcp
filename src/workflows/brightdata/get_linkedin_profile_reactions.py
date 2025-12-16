@@ -20,7 +20,7 @@ with import_functions():
 @workflow.defn(description="Get a LinkedIn profile's reactions (Not Implemented)")
 class GetLinkedinProfileReactionsWorkflowBrightdata:
     @workflow.run
-    async def run(self, workflow_input: GetReactionsInput) -> dict[str, Any]:
+    async def run(self, workflow_input: GetReactionsInput) -> Any:
         log.info("GetLinkedinProfileReactionsWorkflowBrightdata started")
         try:
             # The function call will always raise an error in this version.

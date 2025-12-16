@@ -10,9 +10,16 @@ from src.client import client, TASK_QUEUE
 # Import brightdata functions and workflows
 from src.functions.linkedin.create_post import create_post_on_linkedin
 from src.workflows.linkedin.create_post import CreatePostOnLinkedinWorkflow
-from src.functions.brightdata.get_linkedin_profile import get_linkedin_profile_brightdata
+from src.functions.brightdata.get_linkedin_profile import (
+    get_linkedin_profile_brightdata,
+    trigger_linkedin_profile_scrape,
+    download_brightdata_snapshot,
+)
 from src.workflows.brightdata.get_linkedin_profile import GetLinkedinProfileWorkflowBrightdata
-from src.functions.brightdata.get_linkedin_profile_posts import get_linkedin_profile_posts_brightdata
+from src.functions.brightdata.get_linkedin_profile_posts import (
+    get_linkedin_profile_posts_brightdata,
+    trigger_linkedin_profile_posts_scrape,
+)
 from src.workflows.brightdata.get_linkedin_profile_posts import GetLinkedinProfilePostsWorkflowBrightdata
 from src.functions.brightdata.get_linkedin_profile_reactions import get_linkedin_profile_reactions_brightdata
 from src.workflows.brightdata.get_linkedin_profile_reactions import GetLinkedinProfileReactionsWorkflowBrightdata
@@ -50,7 +57,10 @@ async def main() -> None:
         save_linkedin_lead_phantombuster,
         # Brightdata
         get_linkedin_profile_brightdata,
+        trigger_linkedin_profile_scrape,
+        download_brightdata_snapshot,
         get_linkedin_profile_posts_brightdata,
+        trigger_linkedin_profile_posts_scrape,
         get_linkedin_profile_reactions_brightdata,
     ]
 

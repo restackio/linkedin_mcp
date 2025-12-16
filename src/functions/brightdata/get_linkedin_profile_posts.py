@@ -32,18 +32,44 @@ def raise_exception(message: str) -> None:
     raise NonRetryableError(message)
 
 
-def construct_activity_url(profile_url: str) -> str:
-    """Constructs the recent activity URL from a base profile URL if necessary."""
-    if "recent-activity" not in profile_url:
-        # Ensure the URL ends with a slash before appending
-        if not profile_url.endswith('/'):
-            profile_url += '/'
-        return f"{profile_url}recent-activity/all/"
-    return profile_url
+@function.defn()
+async def trigger_linkedin_profile_posts_scrape(function_input: GetProfilePostsInput) -> dict[str, Any]:
+    """Trigger a LinkedIn profile posts scrape and return the snapshot_id."""
+    try:
+        api_token = os.environ.get("BRIGHT_DATA_API_TOKEN")
+        if not api_token:
+            raise_exception("BRIGHT_DATA_API_TOKEN is not set")
+
+        bd = bdclient(api_token)
+        
+        profile_url = function_input.profile_url.split('recent-activity')[0]
+        log.info(f"Initiating post discovery for profile {profile_url}")
+
+        initial_response = await asyncio.to_thread(
+            bd.search_linkedin.posts, profile_url=profile_url
+        )
+
+        snapshot_id = initial_response.get("snapshot_id")
+        if not snapshot_id:
+            status = initial_response.get("status")
+            # If status is "starting" without snapshot_id, that's an error condition
+            if status == "starting":
+                raise_exception(f"Received 'starting' status but no snapshot_id found in response: {initial_response}")
+            # Otherwise, assume we got the data directly (shouldn't happen, but handle it)
+            log.info("Received synchronous response for posts from Bright Data.")
+            return initial_response
+
+        log.info(f"Post discovery initiated. Snapshot ID: {snapshot_id}")
+        return {"snapshot_id": snapshot_id}
+
+    except Exception as e:
+        error_message = f"trigger_linkedin_profile_posts_scrape failed: {e}"
+        raise NonRetryableError(error_message) from e
 
 
 @function.defn()
-async def get_linkedin_profile_posts_brightdata(function_input: GetProfilePostsInput) -> dict[str, Any]:
+async def get_linkedin_profile_posts_brightdata(function_input: GetProfilePostsInput) -> Any:
+    """Legacy function - kept for backward compatibility. Use trigger_linkedin_profile_posts_scrape + download_brightdata_snapshot instead."""
     try:
         api_token = os.environ.get("BRIGHT_DATA_API_TOKEN")
         if not api_token:
@@ -65,19 +91,32 @@ async def get_linkedin_profile_posts_brightdata(function_input: GetProfilePostsI
 
         log.info(f"Post discovery initiated. Snapshot ID: {snapshot_id}")
 
-        while True:
-            log.info(f"Checking status for snapshot {snapshot_id}...")
+        # Poll for completion
+        max_attempts = 60  # 5 minutes max (60 * 5 seconds)
+        attempt = 0
+        while attempt < max_attempts:
+            attempt += 1
+            log.info(f"Checking status for snapshot {snapshot_id} (attempt {attempt}/{max_attempts})...")
             status_response = await asyncio.to_thread(bd.download_snapshot, snapshot_id=snapshot_id)
             
-            status = status_response.get("status")
-            log.info(f"Snapshot status: {status}")
+            # Bright Data returns a list when ready, or a dict with status when processing
+            if isinstance(status_response, list):
+                log.info(f"Snapshot {snapshot_id} is ready. Retrieved {len(status_response)} record(s).")
+                return status_response
+            
+            if isinstance(status_response, dict):
+                status = status_response.get("status")
+                log.info(f"Snapshot status: {status}")
 
-            if status == "done":
-                break
-            elif status == "failed":
-                raise_exception(f"Bright Data snapshot {snapshot_id} failed. Details: {status_response}")
+                if status == "done":
+                    break
+                elif status == "failed":
+                    raise_exception(f"Bright Data snapshot {snapshot_id} failed. Details: {status_response}")
             
             await asyncio.sleep(5)
+
+        if attempt >= max_attempts:
+            raise_exception(f"Timeout waiting for Bright Data snapshot {snapshot_id} to complete after {max_attempts} attempts")
 
         log.info(f"Snapshot {snapshot_id} is ready. Downloading result.")
         posts_data = await asyncio.to_thread(bd.download_snapshot, snapshot_id=snapshot_id)
